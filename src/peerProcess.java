@@ -30,15 +30,6 @@ public class peerProcess {
         }
     }
 
-    public void PrintConfigParams() {
-        System.out.println(config_params.get("NumberOfPreferredNeighbors"));
-        System.out.println(config_params.get("UnchokingInterval"));
-        System.out.println(config_params.get("OptimisticUnchokingInterval"));
-        System.out.println(config_params.get("FileName"));
-        System.out.println(config_params.get("FileSize"));
-        System.out.println(config_params.get("PieceSize"));
-    }
-
     public void ReadPeerInfoCfg() {
         try {
             String line;
@@ -49,9 +40,9 @@ public class peerProcess {
 
             while((line = file.readLine()) != null) {
                 line_split = line.split(" ");
-                if (!found_peer && Integer.valueOf(line_split[0]) == peer_id) {
+                if (!found_peer && Integer.parseInt(line_split[0]) == peer_id) {
                     found_peer = true;
-                    peer_port = Integer.valueOf(line_split[2]);
+                    peer_port = Integer.parseInt(line_split[2]);
                     has_file = line_split[3].equals("1");
                     System.out.println(line_split[3]);
                     System.out.println(has_file);
@@ -59,7 +50,7 @@ public class peerProcess {
                     if (!found_peer)
                         previous_neighbors_ids.add(Integer.valueOf(line_split[0]));
                     PeerDetails peer_details = new PeerDetails(line);
-                    neighbors_list.put(Integer.valueOf(line_split[0]), peer_details);
+                    neighbors_list.put(Integer.parseInt(line_split[0]), peer_details);
                 }
             }
         }
@@ -69,7 +60,7 @@ public class peerProcess {
     }
 
     public static void main(String args[]) {
-        peerProcess peer = new peerProcess(Integer.valueOf(args[0]));
+        peerProcess peer = new peerProcess(Integer.parseInt(args[0]));
         peer.ReadCommonCfg();
         peer.ReadPeerInfoCfg();
         PeerClient peer_client = new PeerClient(peer_id, neighbors_list, previous_neighbors_ids);
