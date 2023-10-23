@@ -11,6 +11,7 @@ public class peerProcess {
     private static ArrayList<Integer> previous_neighbors_ids = new ArrayList<Integer>();
     private static boolean has_file = false;
     private static boolean is_first_peer = false;
+    private static BitSet bitfield_piece_index;
     public peerProcess(int id) {
         peer_id = id;
     }
@@ -63,6 +64,19 @@ public class peerProcess {
         peerProcess peer = new peerProcess(Integer.parseInt(args[0]));
         peer.ReadCommonCfg();
         peer.ReadPeerInfoCfg();
-        PeerClient peer_client = new PeerClient(peer_id, neighbors_list, previous_neighbors_ids);
+
+        int file_size = Integer.getInteger(config_params.get("FileSize"));
+        int piece_size = Integer.getInteger(config_params.get("PieceSize"));
+        int no_of_pieces = (int) Math.ceil((double)file_size/piece_size);
+
+        bitfield_piece_index = new BitSet(no_of_pieces);
+
+        if(has_file) {
+            for(int i = 1; i <= no_of_pieces; i++) {
+                bitfield_piece_index.set(i);
+            }
+        }
+
+        PeerClient peer_client = new PeerClient(peer_id, neighbors_list, previous_neighbors_ids, bitfield_piece_index);
     }
 }

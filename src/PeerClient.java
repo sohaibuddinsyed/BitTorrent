@@ -3,6 +3,7 @@ import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 
 public class PeerClient extends Thread{
@@ -10,10 +11,12 @@ public class PeerClient extends Thread{
     private int peer_id;
     private HashMap<Integer, PeerDetails> neighbors_list;
     private ArrayList<Integer> previous_neighbors_ids;
-    public PeerClient(int peer_id, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids) {
+    private BitSet bitfield_piece_index;
+    public PeerClient(int peer_id, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, BitSet bitfield_piece_index) {
         this.peer_id = peer_id;
         this.neighbors_list = neighbors_list;
         this.previous_neighbors_ids = previous_neighbors_ids;
+        this.bitfield_piece_index = bitfield_piece_index;
     }
 
     public void run() {
@@ -55,6 +58,20 @@ public class PeerClient extends Thread{
                     if (hand_shake.VerifyHandShakeMessage(hand_shake_rcv, peer_details.peer_id))
                         break;
                 }
+
+                Message bit_field_message = new Message(0, (byte)5, new byte[0]);
+                sendMessage(bit_field_message.BuildMessageByteArray());
+
+                Message bit_field_rcv = new Message(0, (byte)5, in.readAllBytes());
+                boolean interested = bit_field_rcv.HandleBitFieldMessage(bitfield_piece_index);
+                if(interested) {
+                    Message interested_msg = new Message(0, (byte)2, new byte[0]);
+                    sendMessage(interested_msg.BuildMessageByteArray());
+                } else {
+                    Message not_interested_msg = new Message(0, (byte)2, new byte[0]);
+                    sendMessage(not_interested_msg.BuildMessageByteArray());
+                }
+
             } catch (ConnectException e) {
                 System.err.println("Connection refused. You need to initiate a server first.");
             } catch (UnknownHostException unknownHost) {
