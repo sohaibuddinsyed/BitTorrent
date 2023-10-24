@@ -19,7 +19,7 @@ public class PeerServer extends Thread {
         try {
             listener = new ServerSocket(peer_port);
             while(true) {
-                new Handler(listener.accept()).start();
+                new Handler(listener.accept(), peer_id).start();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -43,10 +43,12 @@ public class PeerServer extends Thread {
         private Socket connection;
         private ObjectInputStream in;	//stream read from the socket
         private ObjectOutputStream out;    //stream write to the socket
+        private int peer_id;
 
 
-        public Handler(Socket connection) {
+        public Handler(Socket connection, int peer_id) {
             this.connection = connection;
+            this.peer_id    = peer_id;
         }
 
         public void run() {

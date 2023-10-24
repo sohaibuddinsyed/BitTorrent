@@ -52,7 +52,7 @@ public class PeerClient extends Thread{
                 HandShake hand_shake = new HandShake(peer_details.peer_id);
                 sendMessage(hand_shake.BuildHandshakeMessage());
 
-                byte[] hand_shake_rcv = in.readAllBytes();
+                byte[] hand_shake_rcv = (byte[]) in.readObject();
 
                 while (true) {
                     // HandShake message received and verified
@@ -79,6 +79,8 @@ public class PeerClient extends Thread{
                 System.err.println("You are trying to connect to an unknown host!");
             } catch (IOException ioException) {
                 ioException.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
             } finally {
                 //Close connections
                 try {
