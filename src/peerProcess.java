@@ -12,7 +12,6 @@ public class peerProcess {
     private static HashMap<String, String> config_params;
     private static HashMap<Integer, PeerDetails> neighbors_list;
     private static ArrayList<Integer> previous_neighbors_ids;
-    private static BitSet bitfield_piece_index;
     public peerProcess(int id) {
         peer_id                = id;
         config_params          = new HashMap<>();
@@ -72,7 +71,7 @@ public class peerProcess {
         int piece_size   = Integer.getInteger(config_params.get("PieceSize"));
         int no_of_pieces = (int) Math.ceil((double)file_size/piece_size);
 
-        bitfield_piece_index = new BitSet(no_of_pieces);
+        BitSet bitfield_piece_index = new BitSet(no_of_pieces);
 
         // Sets all bit values to 1 if has_file is true else the values will be 0 by default
         if(curr_peer.has_file) {
@@ -80,6 +79,7 @@ public class peerProcess {
                 bitfield_piece_index.set(i);
             }
         }
+        curr_peer.bitfield_piece_index = bitfield_piece_index;
     }
 
     public static void main(String args[]) {
@@ -94,7 +94,7 @@ public class peerProcess {
         peer.ReadPeerInfoCfg();
         peer.SetBitField();
         // Creating PeerClient object
-        PeerClient peer_client = new PeerClient(peer_id, neighbors_list, previous_neighbors_ids, bitfield_piece_index);
+        PeerClient peer_client = new PeerClient(curr_peer, neighbors_list, previous_neighbors_ids);
         // Invoke the run() method in peer_client to set up TCP Connection with peers listed before current peer
         peer_client.start();
     }

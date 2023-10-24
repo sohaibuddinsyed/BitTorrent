@@ -1,10 +1,16 @@
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.BitSet;
 
 public class PeerDetails {
     public String hostname;
     public Boolean has_file;
     public int peer_id, peer_port;
+    public BitSet bitfield_piece_index;
     Socket socket;
+    ObjectOutputStream out;
+    ObjectInputStream in;
 
     public PeerDetails(String line) {
         String[] line_split = line.split(" ");
