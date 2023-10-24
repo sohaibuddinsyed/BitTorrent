@@ -77,7 +77,7 @@ public class peerProcess {
         int piece_size   = Integer.parseInt(config_params.get("PieceSize"));
         int no_of_pieces = (int) Math.ceil((double)file_size/piece_size);
 
-        bitfield_piece_index = new BitSet(no_of_pieces);
+        BitSet bitfield_piece_index = new BitSet(no_of_pieces);
 
         // Sets all bit values to 1 if has_file is true else the values will be 0 by default
         if(curr_peer.has_file) {
@@ -85,6 +85,7 @@ public class peerProcess {
                 bitfield_piece_index.set(i);
             }
         }
+        curr_peer.bitfield_piece_index = bitfield_piece_index;
     }
 
     public static void main(String args[]) {
@@ -100,7 +101,7 @@ public class peerProcess {
         peer.SetBitField();
         
         // Creating PeerClient and PeerServer object
-        peer_client = new PeerClient(peer_id, neighbors_list, previous_neighbors_ids, bitfield_piece_index, logger);
+        peer_client = new PeerClient(curr_peer, neighbors_list, previous_neighbors_ids, logger);
         peer_server = new PeerServer(peer_id, curr_peer.peer_port, neighbors_list, previous_neighbors_ids, bitfield_piece_index, logger);
         peer_client.start();
         peer_server.start();

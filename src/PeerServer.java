@@ -92,16 +92,16 @@ public class PeerServer extends Thread {
                         System.out.println(bit_field_message.BuildMessageByteArray());
                         sendMessage(bit_field_message.BuildMessageByteArray());
 
-                        boolean interested = bit_field_rcv.HandleBitFieldMessage(bitfield_piece_index);
+                        // boolean interested = P2PMessageHandler.HandleBitFieldMessage(bitfield_piece_index);
 
                         // Send interested or not interested message
-                        if (interested) {
-                            Message interested_msg = new Message(0, (byte)2, new byte[0]);
-                            sendMessage(interested_msg.BuildMessageByteArray());
-                        } else {
-                            Message not_interested_msg = new Message(0, (byte)2, new byte[0]);
-                            sendMessage(not_interested_msg.BuildMessageByteArray());
-                        }
+                        // if (interested) {
+                        //     Message interested_msg = new Message(0, (byte)2, new byte[0]);
+                        //     sendMessage(interested_msg.BuildMessageByteArray());
+                        // } else {
+                        //     Message not_interested_msg = new Message(0, (byte)2, new byte[0]);
+                        //     sendMessage(not_interested_msg.BuildMessageByteArray());
+                        // }
                     }
                 }
                 catch(Exception classnot){

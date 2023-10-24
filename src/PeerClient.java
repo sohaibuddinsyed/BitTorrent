@@ -8,18 +8,15 @@ import java.util.HashMap;
 
 public class PeerClient extends Thread{
 
-    private int peer_id;
+    private PeerDetails curr_peer;
     private HashMap<Integer, PeerDetails> neighbors_list;
     private ArrayList<Integer> previous_neighbors_ids;
-    private BitSet bitfield_piece_index;
     private Logger logger;
 
-    public PeerClient(int peer_id, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, BitSet bitfield_piece_index, Logger logger) {
-        this.peer_id                = peer_id;
+    public PeerClient(PeerDetails curr_peer, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, Logger logger) {
+        this.curr_peer              = curr_peer;
         this.neighbors_list         = neighbors_list;
         this.previous_neighbors_ids = previous_neighbors_ids;
-        this.bitfield_piece_index   = bitfield_piece_index;
-        this.logger = logger;
     }
 
     public void run() {
@@ -35,57 +32,53 @@ public class PeerClient extends Thread{
         DataInputStream in;          //stream read from the socket
         String message;                //message send to the server
         String MESSAGE;                //capitalized message read from the server
-        PeerDetails peer_details;
+        PeerDetails neighbor_peer;
 
         public Client(PeerDetails peer_details) {
-            this.peer_details = peer_details;
+            this.neighbor_peer = peer_details;
         }
 
         public void run() {
             try {
                 //create a socket to connect to the server
-                System.out.println("Client is running" + peer_details.peer_id);
-                requestSocket       = new Socket(peer_details.hostname, peer_details.peer_port);
-                peer_details.socket = requestSocket;
-                logger.log("makes a connection to Peer " + peer_details.peer_id);
+                requestSocket        = new Socket(neighbor_peer.hostname, neighbor_peer.peer_port);
 
+                logger.log("makes a connection to Peer " + neighbor_peer.peer_id);
                 //initialize inputStream and outputStream
                 out = new DataOutputStream(requestSocket.getOutputStream());
                 out.flush();
                 in = new DataInputStream(requestSocket.getInputStream());
 
-                HandShake hand_shake = new HandShake(peer_details.peer_id);
-                sendMessage(hand_shake.BuildHandshakeMessage());
+                neighbor_peer.socket = requestSocket;
+                neighbor_peer.out    = out;
+                neighbor_peer.in     = in;
 
-                byte[] hand_shake_rcv = new byte[32];
-                in.read(hand_shake_rcv);
+                HandShake hand_shake = new HandShake(curr_peer.peer_id);
+                HelperMethods.sendMessage(hand_shake.BuildHandshakeMessage(), out);
 
                 while (true) {
                     // HandShake message received and verified
-                    if (hand_shake.VerifyHandShakeMessage(hand_shake_rcv, peer_details.peer_id))
+                    byte[] hand_shake_rcv = (byte[]) in.readAllBytes();
+                    if (hand_shake.VerifyHandShakeMessage(hand_shake_rcv, neighbor_peer.peer_id))
                         break;
                 }
 
-                System.out.println(bitfield_piece_index.length());
+                Message bit_field_message = new Message(0, (byte)5, curr_peer.bitfield_piece_index.toByteArray());
+                HelperMethods.sendMessage(bit_field_message.BuildMessageByteArray(), out);
 
-                Message bit_field_message = new Message(bitfield_piece_index.size()/8, (byte)5, bitfield_piece_index.toByteArray());
-                System.out.println(bit_field_message.BuildMessageByteArray());
-                sendMessage(bit_field_message.BuildMessageByteArray());
+                P2PMessageHandler message_handler = new P2PMessageHandler(curr_peer, neighbor_peer);
+                message_handler.MessageListener();
 
-                System.out.println("Bitfield sent");
 
-                Message bit_field_rcv = new Message(0, (byte)5, in.readAllBytes());
-                boolean interested = bit_field_rcv.HandleBitFieldMessage(bitfield_piece_index);
-
-                System.out.println("Bitfield recvd");
-
-                if (interested) {
-                    Message interested_msg = new Message(0, (byte)2, new byte[0]);
-                    sendMessage(interested_msg.BuildMessageByteArray());
-                } else {
-                    Message not_interested_msg = new Message(0, (byte)2, new byte[0]);
-                    sendMessage(not_interested_msg.BuildMessageByteArray());
-                }
+//                Message bit_field_rcv = new Message(0, (byte)5, in.readAllBytes());
+//                boolean interested = bit_field_rcv.HandleBitFieldMessage(bitfield_piece_index);
+//                if (interested) {
+//                    Message interested_msg = new Message(0, (byte)2, new byte[0]);
+//                    sendMessage(interested_msg.BuildMessageByteArray());
+//                } else {
+//                    Message not_interested_msg = new Message(0, (byte)2, new byte[0]);
+//                    sendMessage(not_interested_msg.BuildMessageByteArray());
+//                }
 
             } catch (ConnectException e) {
                 System.err.println("Connection refused. You need to initiate a server first.");
@@ -119,17 +112,16 @@ public class PeerClient extends Thread{
             }
         }
 
-        void sendMessage(byte[] msg)
-        {
-            try{
-                //stream write the message
-                //writeObject or just write?
-                out.write(msg);
-                out.flush();
-            }
-            catch(IOException ioException){
-                ioException.printStackTrace();
-            }
-        }
+//        void sendMessage(byte[] msg)
+//        {
+//            try{
+//                //stream write the message
+//                out.writeObject(msg);
+//                out.flush();
+//            }
+//            catch(IOException ioException){
+//                ioException.printStackTrace();
+//            }
+//        }
     }
 }
