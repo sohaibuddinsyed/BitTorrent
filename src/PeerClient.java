@@ -11,7 +11,9 @@ public class PeerClient extends Thread{
     private PeerDetails curr_peer;
     private HashMap<Integer, PeerDetails> neighbors_list;
     private ArrayList<Integer> previous_neighbors_ids;
-    public PeerClient(PeerDetails curr_peer, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids) {
+    private Logger logger;
+
+    public PeerClient(PeerDetails curr_peer, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, Logger logger) {
         this.curr_peer              = curr_peer;
         this.neighbors_list         = neighbors_list;
         this.previous_neighbors_ids = previous_neighbors_ids;
@@ -26,8 +28,8 @@ public class PeerClient extends Thread{
 
     public class Client extends Thread{
         Socket requestSocket;           //socket connect to the server
-        ObjectOutputStream out;         //stream write to the socket
-        ObjectInputStream in;          //stream read from the socket
+        DataOutputStream out;         //stream write to the socket
+        DataInputStream in;          //stream read from the socket
         String message;                //message send to the server
         String MESSAGE;                //capitalized message read from the server
         PeerDetails neighbor_peer;
@@ -41,11 +43,11 @@ public class PeerClient extends Thread{
                 //create a socket to connect to the server
                 requestSocket        = new Socket(neighbor_peer.hostname, neighbor_peer.peer_port);
 
-                System.out.println("Connected to " + neighbor_peer.hostname + "in port " + neighbor_peer.peer_port);
+                logger.log("makes a connection to Peer " + neighbor_peer.peer_id);
                 //initialize inputStream and outputStream
-                out = new ObjectOutputStream(requestSocket.getOutputStream());
+                out = new DataOutputStream(requestSocket.getOutputStream());
                 out.flush();
-                in = new ObjectInputStream(requestSocket.getInputStream());
+                in = new DataInputStream(requestSocket.getInputStream());
 
                 neighbor_peer.socket = requestSocket;
                 neighbor_peer.out    = out;
@@ -56,7 +58,7 @@ public class PeerClient extends Thread{
 
                 while (true) {
                     // HandShake message received and verified
-                    byte[] hand_shake_rcv = (byte[]) in.readObject();
+                    byte[] hand_shake_rcv = (byte[]) in.readAllBytes();
                     if (hand_shake.VerifyHandShakeMessage(hand_shake_rcv, neighbor_peer.peer_id))
                         break;
                 }
@@ -84,7 +86,7 @@ public class PeerClient extends Thread{
                 System.err.println("You are trying to connect to an unknown host!");
             } catch (IOException ioException) {
                 ioException.printStackTrace();
-            } catch (ClassNotFoundException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             } finally {
                 //Close connections
@@ -102,7 +104,7 @@ public class PeerClient extends Thread{
         {
             try{
                 //stream write the message
-                out.writeObject(msg);
+                out.writeBytes(msg);
                 out.flush();
             }
             catch(IOException ioException){

@@ -1,3 +1,4 @@
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.BitSet;
@@ -60,10 +61,10 @@ public class P2PMessageHandler {
     }
 
     public void MessageListener() throws IOException, ClassNotFoundException {
-        ObjectInputStream in = neighbor_peer.in;
+        DataInputStream in = neighbor_peer.in;
         MessageType msg_type;
         while (true) {
-            Message message_received = new Message((byte[]) in.readObject());
+            Message message_received = new Message((byte[]) in.readAllBytes());
             msg_type = message_received.GetMessageType();
 
             switch(msg_type) {

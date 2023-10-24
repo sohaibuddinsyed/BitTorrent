@@ -22,9 +22,9 @@ public class Message {
     public byte[] BuildMessageByteArray() {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             try {
-                buffer.write(message_payload);
                 buffer.write(message_length);
                 buffer.write(message_type);
+                buffer.write(message_payload);
             } catch (IOException e) {
                 e.printStackTrace();
             }

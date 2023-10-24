@@ -26,18 +26,18 @@ public class Logger {
     }
 
     public void log(String log_string) {
-        Date currentTime = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
-        String formattedTime = dateFormat.format(currentTime);
-        String content = formattedTime + ": Peer " + peer_name + " " + log_string + "\n";
-        System.out.print(content);
         try {
+            Date currentTime = new Date();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+            String formattedTime = dateFormat.format(currentTime);
+            String content = formattedTime + ": Peer " + peer_name + " " + log_string + "\n";
+            System.out.print(content);
             // Write logs to file log_peer_[peer_id].log
             FileOutputStream fileOutputStream = new FileOutputStream(log_file_name, true);
             byte[] bytes = content.getBytes();
             fileOutputStream.write(bytes);
             fileOutputStream.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("An error occurred while logging");
             e.printStackTrace();
         }
