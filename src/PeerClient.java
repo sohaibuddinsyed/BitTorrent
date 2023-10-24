@@ -12,11 +12,14 @@ public class PeerClient extends Thread{
     private HashMap<Integer, PeerDetails> neighbors_list;
     private ArrayList<Integer> previous_neighbors_ids;
     private BitSet bitfield_piece_index;
-    public PeerClient(int peer_id, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, BitSet bitfield_piece_index) {
+    private Logger logger;
+
+    public PeerClient(int peer_id, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, BitSet bitfield_piece_index, Logger logger) {
         this.peer_id                = peer_id;
         this.neighbors_list         = neighbors_list;
         this.previous_neighbors_ids = previous_neighbors_ids;
         this.bitfield_piece_index   = bitfield_piece_index;
+        this.logger = logger;
     }
 
     public void run() {
@@ -28,8 +31,8 @@ public class PeerClient extends Thread{
 
     public class Client extends Thread{
         Socket requestSocket;           //socket connect to the server
-        ObjectOutputStream out;         //stream write to the socket
-        ObjectInputStream in;          //stream read from the socket
+        DataOutputStream out;         //stream write to the socket
+        DataInputStream in;          //stream read from the socket
         String message;                //message send to the server
         String MESSAGE;                //capitalized message read from the server
         PeerDetails peer_details;
@@ -41,18 +44,21 @@ public class PeerClient extends Thread{
         public void run() {
             try {
                 //create a socket to connect to the server
+                System.out.println("Client is running" + peer_details.peer_id);
                 requestSocket       = new Socket(peer_details.hostname, peer_details.peer_port);
                 peer_details.socket = requestSocket;
-                System.out.println("Connected to " + peer_details.hostname + "in port " + peer_details.peer_port);
+                logger.log("makes a connection to Peer " + peer_details.peer_id);
+
                 //initialize inputStream and outputStream
-                out = new ObjectOutputStream(requestSocket.getOutputStream());
+                out = new DataOutputStream(requestSocket.getOutputStream());
                 out.flush();
-                in = new ObjectInputStream(requestSocket.getInputStream());
+                in = new DataInputStream(requestSocket.getInputStream());
 
                 HandShake hand_shake = new HandShake(peer_details.peer_id);
                 sendMessage(hand_shake.BuildHandshakeMessage());
 
-                byte[] hand_shake_rcv = (byte[]) in.readObject();
+                byte[] hand_shake_rcv = new byte[32];
+                in.read(hand_shake_rcv);
 
                 while (true) {
                     // HandShake message received and verified
@@ -60,11 +66,19 @@ public class PeerClient extends Thread{
                         break;
                 }
 
-                Message bit_field_message = new Message(0, (byte)5, new byte[0]);
+                System.out.println(bitfield_piece_index.length());
+
+                Message bit_field_message = new Message(bitfield_piece_index.size()/8, (byte)5, bitfield_piece_index.toByteArray());
+                System.out.println(bit_field_message.BuildMessageByteArray());
                 sendMessage(bit_field_message.BuildMessageByteArray());
+
+                System.out.println("Bitfield sent");
 
                 Message bit_field_rcv = new Message(0, (byte)5, in.readAllBytes());
                 boolean interested = bit_field_rcv.HandleBitFieldMessage(bitfield_piece_index);
+
+                System.out.println("Bitfield recvd");
+
                 if (interested) {
                     Message interested_msg = new Message(0, (byte)2, new byte[0]);
                     sendMessage(interested_msg.BuildMessageByteArray());
@@ -79,7 +93,7 @@ public class PeerClient extends Thread{
                 System.err.println("You are trying to connect to an unknown host!");
             } catch (IOException ioException) {
                 ioException.printStackTrace();
-            } catch (ClassNotFoundException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             } finally {
                 //Close connections
@@ -97,7 +111,7 @@ public class PeerClient extends Thread{
         {
             try{
                 //stream write the message
-                out.writeObject(msg);
+                out.writeBytes(msg);
                 out.flush();
             }
             catch(IOException ioException){
@@ -110,7 +124,7 @@ public class PeerClient extends Thread{
             try{
                 //stream write the message
                 //writeObject or just write?
-                out.writeObject(msg);
+                out.write(msg);
                 out.flush();
             }
             catch(IOException ioException){

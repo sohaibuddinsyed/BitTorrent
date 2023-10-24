@@ -1,5 +1,7 @@
+import java.nio.charset.StandardCharsets;
+
 public class HandShake {
-    private String handshake_header;
+    private static String handshake_header;
     private String zero_bits;
     private String peer_id;
 
@@ -18,5 +20,10 @@ public class HandShake {
         String msg = new String(handshake_msg);
         return msg.substring(0, 18).equals(handshake_header) &&
                 msg.substring(28).equals(String.valueOf(id));
+    }
+
+    public static boolean VerifyHandShakeMessage(byte[] handshake_msg) {
+        String msg = new String(handshake_msg);
+        return msg.substring(0, 18) == handshake_header;
     }
 }
