@@ -13,13 +13,14 @@ public class PeerClient extends Thread{
     private ArrayList<Integer> previous_neighbors_ids;
     private BitSet bitfield_piece_index;
     public PeerClient(int peer_id, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, BitSet bitfield_piece_index) {
-        this.peer_id = peer_id;
-        this.neighbors_list = neighbors_list;
+        this.peer_id                = peer_id;
+        this.neighbors_list         = neighbors_list;
         this.previous_neighbors_ids = previous_neighbors_ids;
-        this.bitfield_piece_index = bitfield_piece_index;
+        this.bitfield_piece_index   = bitfield_piece_index;
     }
 
     public void run() {
+        // Creating Client object for all the neighbors that requires TCP Connection
         for (int id: previous_neighbors_ids) {
             new Client(neighbors_list.get(id)).start();
         }
@@ -40,7 +41,7 @@ public class PeerClient extends Thread{
         public void run() {
             try {
                 //create a socket to connect to the server
-                requestSocket = new Socket(peer_details.hostname, peer_details.peer_port);
+                requestSocket       = new Socket(peer_details.hostname, peer_details.peer_port);
                 peer_details.socket = requestSocket;
                 System.out.println("Connected to " + peer_details.hostname + "in port " + peer_details.peer_port);
                 //initialize inputStream and outputStream
@@ -64,7 +65,7 @@ public class PeerClient extends Thread{
 
                 Message bit_field_rcv = new Message(0, (byte)5, in.readAllBytes());
                 boolean interested = bit_field_rcv.HandleBitFieldMessage(bitfield_piece_index);
-                if(interested) {
+                if (interested) {
                     Message interested_msg = new Message(0, (byte)2, new byte[0]);
                     sendMessage(interested_msg.BuildMessageByteArray());
                 } else {
