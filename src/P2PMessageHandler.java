@@ -69,11 +69,11 @@ public class P2PMessageHandler {
         if(send_interested) {
             // If interested send 'interested' message type
             Message interest_msg = new Message(0, (byte)2, new byte[0]);
-            Utils.sendMessage(interest_msg.BuildMessageByteArray(), curr_peer.out);
+            Utils.sendMessage(interest_msg.BuildMessageByteArray(), neighbor_peer.out);
             } else {
             // If not interested send 'not interested' message type
             Message not_interested_msg = new Message(0, (byte)3, new byte[0]);
-            Utils.sendMessage(not_interested_msg.BuildMessageByteArray(), curr_peer.out);
+            Utils.sendMessage(not_interested_msg.BuildMessageByteArray(), neighbor_peer.out);
             }
     }
 
