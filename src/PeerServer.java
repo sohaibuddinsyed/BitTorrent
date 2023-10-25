@@ -12,6 +12,7 @@ public class PeerServer extends Thread {
     private ArrayList<Integer> previous_neighbors_ids;
     private Logger logger;
 
+    // Peer server constructor 
     public PeerServer(PeerDetails curr_peer, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, Logger logger) {
         this.curr_peer              = curr_peer;
         this.neighbors_list         = neighbors_list;
@@ -21,9 +22,12 @@ public class PeerServer extends Thread {
     public void run() {
         System.out.println("The server is running.");
         ServerSocket listener = null;
+
+        // listen and accept connection requests
         try {
             listener = new ServerSocket(curr_peer.peer_port);
             while(true) {
+                // Start a handler for the incoming connection
                 new Handler(listener.accept()).start();
             }
         } catch (IOException e) {
@@ -75,13 +79,13 @@ public class PeerServer extends Thread {
 
                         // Send handshake to client
                         HandShake hand_shake_msg = new HandShake(Integer.parseInt(client_peer_id));
-                        HelperMethods.sendMessage(hand_shake_msg.BuildHandshakeMessage(), out);
+                        Utils.sendMessage(hand_shake_msg.BuildHandshakeMessage(), out);
                         System.out.println("Server send handshake");
 
                         // Send bitfield to client
                         Message bit_field_message = new Message(curr_peer.bitfield_piece_index.size()/8, (byte)5, curr_peer.bitfield_piece_index.toByteArray());
                         System.out.println(bit_field_message.BuildMessageByteArray());
-                        HelperMethods.sendMessage(bit_field_message.BuildMessageByteArray(), out);
+                        Utils.sendMessage(bit_field_message.BuildMessageByteArray(), out);
                     }
                 }
                 catch(Exception classnot){

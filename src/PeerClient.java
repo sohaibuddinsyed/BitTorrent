@@ -59,7 +59,7 @@ public class PeerClient extends Thread{
                 // Create a handshake object with current peer id, build the handshake message
                 // and send it to the neighbor
                 HandShake hand_shake = new HandShake(curr_peer.peer_id);
-                HelperMethods.sendMessage(hand_shake.BuildHandshakeMessage(), out);
+                Utils.sendMessage(hand_shake.BuildHandshakeMessage(), out);
 
                 while (true) {
                     // Wait for HandShake message to be received and verified
@@ -70,7 +70,7 @@ public class PeerClient extends Thread{
 
                 // Once HandShake is completed, create a bit field message and send it to the neighbor
                 Message bit_field_message = new Message(curr_peer.bitfield_piece_index.size()/8, (byte)5, curr_peer.bitfield_piece_index.toByteArray());
-                HelperMethods.sendMessage(bit_field_message.BuildMessageByteArray(), out);
+                Utils.sendMessage(bit_field_message.BuildMessageByteArray(), out);
 
                 // Create a P2PMessageHandler for each of the TCP Connections which will be responsible
                 // to listen and handle all type of messages
