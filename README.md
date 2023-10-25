@@ -13,6 +13,7 @@ Computer Networks ProjectGroup Name: **Sohaib Uddin Syed's Group**
 ## Usage
 - Unzip the project and navigate to src directory
 - Compile with ```javac *.java```
+- Project compiled with ```openjdk 17.0.8.1```
   
 ## Project Implementation (until now)
 1.	peerProcess.java
