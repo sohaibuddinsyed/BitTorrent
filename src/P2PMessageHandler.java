@@ -66,20 +66,15 @@ public class P2PMessageHandler {
 
         // Check if interested
         boolean send_interested = Utils.CheckInterestInIndex(curr_peer, neighbor_peer, bitfield_index);
-        try {
-            if(send_interested) {
-                // If interested send 'interested' message type
-                Message interest_msg = new Message(0, (byte)2, new byte[0]);
-                curr_peer.out.write(interest_msg.BuildMessageByteArray());
+        if(send_interested) {
+            // If interested send 'interested' message type
+            Message interest_msg = new Message(0, (byte)2, new byte[0]);
+            Utils.sendMessage(interest_msg.BuildMessageByteArray(), curr_peer.out);
             } else {
-                // If not interested send 'not interested' message type
-                Message not_interested_msg = new Message(0, (byte)3, new byte[0]);
-                curr_peer.out.write(not_interested_msg.BuildMessageByteArray());
+            // If not interested send 'not interested' message type
+            Message not_interested_msg = new Message(0, (byte)3, new byte[0]);
+            Utils.sendMessage(not_interested_msg.BuildMessageByteArray(), curr_peer.out);
             }
-        } catch (IOException ioException) {
-            System.out.println("Error sendong interest message");
-            ioException.printStackTrace();
-        }
     }
 
     public void HandleRequestMessage() {
