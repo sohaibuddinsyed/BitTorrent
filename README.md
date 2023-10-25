@@ -6,6 +6,13 @@ Computer Networks ProjectGroup Name: **Sohaib Uddin Syed's Group**
 -	Sohaib Uddin Syed (57405488)
 -	Kshitij Maruti Vejre (83323074)
 -	Prashanth Thamminedi (45331532)
+
+## Deliverables
+- 809 lines of java code
+
+## Usage
+- Unzip the project and navigate to src directory
+- Compile with ```javac *.java```
   
 ## Project Implementation (until now)
 1.	peerProcess.java
