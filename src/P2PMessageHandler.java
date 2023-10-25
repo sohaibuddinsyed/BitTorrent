@@ -6,6 +6,7 @@ import java.util.BitSet;
 public class P2PMessageHandler {
     PeerDetails curr_peer; // Current host
     PeerDetails neighbor_peer; // Neighbor peer to which the current TCP is established
+
     public P2PMessageHandler(PeerDetails curr_peer, PeerDetails neighbor_peer) {
         this.curr_peer     = curr_peer;
         this.neighbor_peer = neighbor_peer;
@@ -19,7 +20,9 @@ public class P2PMessageHandler {
         byte[] message_payload             = message.GetMessagePayload();
         neighbor_peer.bitfield_piece_index = BitSet.valueOf(message_payload);
 
+        // Set the peer bitfield from bitfield index payload
         for (int i = 0; i < message.GetMessageLength(); i++) {
+            // Parse each byte of the bitfield message
             for (int j = 0; j < 8; j++) {
                 if ((message_payload[i] & (1 << j)) != 0) {
                     peer_bitset.set(i * 8 + j);
@@ -36,7 +39,7 @@ public class P2PMessageHandler {
 
         // Make third argument in Message as None and avoid sending third argument?
         Message msg = new Message(0, msg_type, new byte[0]);
-        HelperMethods.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
+        Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
     }
 
     public void HandleChokeMessage() {
@@ -55,8 +58,23 @@ public class P2PMessageHandler {
         // To-do
     }
 
-    public void HandleHaveMessage() {
-        // To-do
+    // Handler for 'have' message type
+    public void HandleHaveMessage(Message message_received) {
+        // Set the bitfield index received from the neighbor_peer
+        int bitfield_index = Integer.parseInt(message_received.GetMessagePayload().toString());
+        neighbor_peer.bitfield_piece_index.set(bitfield_index);
+
+        // Check if interested
+        boolean send_interested = Utils.CheckInterestInIndex(curr_peer, neighbor_peer, bitfield_index);
+        if(send_interested) {
+            // If interested send 'interested' message type
+            Message interest_msg = new Message(0, (byte)2, new byte[0]);
+            Utils.sendMessage(interest_msg.BuildMessageByteArray(), neighbor_peer.out);
+            } else {
+            // If not interested send 'not interested' message type
+            Message not_interested_msg = new Message(0, (byte)3, new byte[0]);
+            Utils.sendMessage(not_interested_msg.BuildMessageByteArray(), neighbor_peer.out);
+            }
     }
 
     public void HandleRequestMessage() {
@@ -94,7 +112,7 @@ public class P2PMessageHandler {
                     break;
                 }
                 case HAVE: {
-                    HandleHaveMessage();
+                    HandleHaveMessage(message_received);
                     break;
                 }
                 case BITFIELD: {

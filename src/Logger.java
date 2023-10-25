@@ -10,6 +10,7 @@ public class Logger {
 
     public Logger(String peer) {
         peer_name = peer;
+        // Required log file name
         String file_name = "log_peer_" + peer + ".log";
         log_file_name = file_name;
         try {
@@ -27,11 +28,13 @@ public class Logger {
 
     public void log(String log_string) {
         try {
+            // Add date to each log statement
             Date currentTime = new Date();
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
             String formattedTime = dateFormat.format(currentTime);
             String content = formattedTime + ": Peer " + peer_name + " " + log_string + "\n";
             System.out.print(content);
+
             // Write logs to file log_peer_[peer_id].log
             FileOutputStream fileOutputStream = new FileOutputStream(log_file_name, true);
             byte[] bytes = content.getBytes();
