@@ -8,6 +8,7 @@ import java.util.*;
 public class PeerServer extends Thread {
 
     private PeerDetails curr_peer;
+    private PeerDetails neighbor_peer;
     private HashMap<Integer, PeerDetails> neighbors_list;
     private ArrayList<Integer> previous_neighbors_ids;
     private Logger logger;
@@ -70,15 +71,21 @@ public class PeerServer extends Thread {
                         // Receive handshake from client
                         int msg_len = in.read(hand_shake_rcv);
                         System.out.println(msg_len + "bytes HS recvd at server");
-                        String client_peer_id = new String(hand_shake_rcv).substring(28);
+                        Integer client_peer_id = Integer.valueOf(new String(hand_shake_rcv).substring(28));
                         logger.log("is connected from Peer " + client_peer_id);
 
                         // If Handshake verification gets field, then break
                         if (!HandShake.VerifyHandShakeMessage(hand_shake_rcv))
                             break;
 
+                        neighbor_peer = neighbors_list.get(client_peer_id);
+                        // Save the socket, out and in details in neighbor_peer object to use it later
+                        neighbor_peer.socket = connection;
+                        neighbor_peer.out    = out;
+                        neighbor_peer.in     = in;
+
                         // Send handshake to client
-                        HandShake hand_shake_msg = new HandShake(Integer.parseInt(client_peer_id));
+                        HandShake hand_shake_msg = new HandShake(client_peer_id);
                         Utils.sendMessage(hand_shake_msg.BuildHandshakeMessage(), out);
                         System.out.println("Server send handshake");
 
@@ -86,6 +93,11 @@ public class PeerServer extends Thread {
                         Message bit_field_message = new Message(curr_peer.bitfield_piece_index.size()/8, (byte)5, curr_peer.bitfield_piece_index.toByteArray());
                         System.out.println(bit_field_message.BuildMessageByteArray());
                         Utils.sendMessage(bit_field_message.BuildMessageByteArray(), out);
+
+                        // Create a P2PMessageHandler for each of the TCP Connections which will be responsible
+                        // to listen and handle all type of messages
+                        P2PMessageHandler message_handler = new P2PMessageHandler(curr_peer, neighbor_peer);
+                        message_handler.MessageListener();
                     }
                 }
                 catch(Exception classnot){
