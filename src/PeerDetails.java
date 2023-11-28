@@ -4,6 +4,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.BitSet;
+import java.util.HashMap;
 
 public class PeerDetails {
     public String hostname; // hostname of the peer

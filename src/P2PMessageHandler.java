@@ -1,14 +1,16 @@
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.BitSet;
 
 public class P2PMessageHandler {
-    PeerDetails curr_peer; // Current host
+    peerProcess host_peer; // Current host
     PeerDetails neighbor_peer; // Neighbor peer to which the current TCP is established
 
-    public P2PMessageHandler(PeerDetails curr_peer, PeerDetails neighbor_peer) {
-        this.curr_peer     = curr_peer;
+    public P2PMessageHandler(peerProcess host_peer, PeerDetails neighbor_peer) {
+        this.host_peer     = host_peer;
         this.neighbor_peer = neighbor_peer;
     }
 
@@ -30,7 +32,7 @@ public class P2PMessageHandler {
             }
         }
         // Compare with current host's bitfield_piece_index
-        BitSet copy = (BitSet) curr_peer.bitfield_piece_index.clone();
+        BitSet copy = (BitSet) host_peer.host_details.bitfield_piece_index.clone();
         // Below will set the bit fields as one if there's any missing piece available in neighbor
         copy.andNot(peer_bitset);
 
@@ -43,19 +45,27 @@ public class P2PMessageHandler {
     }
 
     public void HandleChokeMessage() {
-        // To-do
+        host_peer.choked_by_neighbors.put(neighbor_peer.peer_id, true);
     }
 
     public void HandleUnChokeMessage() {
-        // To-do
+        host_peer.choked_by_neighbors.put(neighbor_peer.peer_id, false);
+        // Gets next interested index and sends request message
+        int interested_index = Utils.GetInterestIndex(host_peer, neighbor_peer);
+        if (interested_index != -1) {
+            Message msg = new Message(0, (byte)6,
+                    ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(interested_index).array());
+            Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
+            host_peer.requested_indices.add(interested_index);
+        }
     }
 
     public void HandleInterestedMessage() {
-        // To-do
+        host_peer.neighbors_interested_in_host.put(neighbor_peer.peer_id, true);
     }
 
     public void HandleNotInterestedMessage() {
-        // To-do
+        host_peer.neighbors_interested_in_host.put(neighbor_peer.peer_id, false);
     }
 
     // Handler for 'have' message type
@@ -65,24 +75,24 @@ public class P2PMessageHandler {
         neighbor_peer.bitfield_piece_index.set(bitfield_index);
 
         // Check if interested
-        boolean send_interested = Utils.CheckInterestInIndex(curr_peer, neighbor_peer, bitfield_index);
-        if(send_interested) {
-            // If interested send 'interested' message type
-            Message interest_msg = new Message(0, (byte)2, new byte[0]);
-            Utils.sendMessage(interest_msg.BuildMessageByteArray(), neighbor_peer.out);
-            } else {
-            // If not interested send 'not interested' message type
-            Message not_interested_msg = new Message(0, (byte)3, new byte[0]);
-            Utils.sendMessage(not_interested_msg.BuildMessageByteArray(), neighbor_peer.out);
-            }
+        boolean send_interested = Utils.CheckInterestInIndex(host_peer.host_details, neighbor_peer, bitfield_index);
+
+        byte msg_type = send_interested ? (byte)2 : (byte)3;
+
+        Message msg = new Message(0, msg_type, new byte[0]);
+        Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
     }
 
-    public void HandleRequestMessage() {
-        // To-do
+    public void HandleRequestMessage(Message message_received) {
+        if (!host_peer.unchoked_by_host.get(neighbor_peer.peer_id))
+            return;
+        int requested_index = Integer.parseInt(message_received.GetMessagePayload().toString());
+        // Create a class to handle file division into pieces and to pull required piece
     }
 
     public void HandlePieceMessage() {
         // To-do
+        
     }
 
     public void MessageListener() throws IOException {
@@ -120,7 +130,7 @@ public class P2PMessageHandler {
                     break;
                 }
                 case REQUEST: {
-                    HandleRequestMessage();
+                    HandleRequestMessage(message_received);
                     break;
                 }
                 case PIECE: {

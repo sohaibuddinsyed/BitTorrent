@@ -9,22 +9,16 @@ import java.util.HashMap;
 // PeerClient is responsible to establish TCP Connections with previous peers
 public class PeerClient extends Thread{
 
-    private PeerDetails curr_peer;
-    private HashMap<Integer, PeerDetails> neighbors_list;
-    private ArrayList<Integer> previous_neighbors_ids;
-    private Logger logger;
+    private peerProcess host_peer;
 
-    public PeerClient(PeerDetails curr_peer, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, Logger logger) {
-        this.curr_peer              = curr_peer;
-        this.neighbors_list         = neighbors_list;
-        this.previous_neighbors_ids = previous_neighbors_ids;
-        this.logger                 = logger;
+    public PeerClient(peerProcess host_peer) {
+        this.host_peer = host_peer;
     }
 
     public void run() {
         // Creating Client object for all the neighbors that requires TCP Connection
-        for (int id: previous_neighbors_ids) {
-            new Client(neighbors_list.get(id)).start();
+        for (int id: host_peer.previous_neighbors_ids) {
+            new Client(host_peer.neighbors_list.get(id)).start();
         }
     }
 
@@ -45,7 +39,7 @@ public class PeerClient extends Thread{
                 //create a socket to connect to the Peerserver og neighbors
                 requestSocket = new Socket(neighbor_peer.hostname, neighbor_peer.peer_port);
 
-                logger.log("makes a connection to Peer " + neighbor_peer.peer_id);
+                host_peer.logger.log("makes a connection to Peer " + neighbor_peer.peer_id);
                 //initialize inputStream and outputStream
                 out = new DataOutputStream(requestSocket.getOutputStream());
                 out.flush();
@@ -58,7 +52,7 @@ public class PeerClient extends Thread{
 
                 // Create a handshake object with current peer id, build the handshake message
                 // and send it to the neighbor
-                HandShake hand_shake = new HandShake(curr_peer.peer_id);
+                HandShake hand_shake = new HandShake(host_peer.peer_id);
                 Utils.sendMessage(hand_shake.BuildHandshakeMessage(), out);
 
                 while (true) {
@@ -69,12 +63,13 @@ public class PeerClient extends Thread{
                 }
 
                 // Once HandShake is completed, create a bit field message and send it to the neighbor
-                Message bit_field_message = new Message(curr_peer.bitfield_piece_index.size()/8, (byte)5, curr_peer.bitfield_piece_index.toByteArray());
+                Message bit_field_message = new Message(host_peer.host_details.bitfield_piece_index.size()/8,
+                        (byte)5, host_peer.host_details.bitfield_piece_index.toByteArray());
                 Utils.sendMessage(bit_field_message.BuildMessageByteArray(), out);
 
                 // Create a P2PMessageHandler for each of the TCP Connections which will be responsible
                 // to listen and handle all type of messages
-                P2PMessageHandler message_handler = new P2PMessageHandler(curr_peer, neighbor_peer);
+                P2PMessageHandler message_handler = new P2PMessageHandler(host_peer, neighbor_peer);
                 message_handler.MessageListener();
 
             } catch (ConnectException e) {

@@ -7,18 +7,12 @@ import java.util.*;
 
 public class PeerServer extends Thread {
 
-    private PeerDetails curr_peer;
+    private peerProcess host_peer;
     private PeerDetails neighbor_peer;
-    private HashMap<Integer, PeerDetails> neighbors_list;
-    private ArrayList<Integer> previous_neighbors_ids;
-    private Logger logger;
 
     // Peer server constructor 
-    public PeerServer(PeerDetails curr_peer, HashMap<Integer, PeerDetails>  neighbors_list, ArrayList<Integer>  previous_neighbors_ids, Logger logger) {
-        this.curr_peer              = curr_peer;
-        this.neighbors_list         = neighbors_list;
-        this.previous_neighbors_ids = previous_neighbors_ids;
-        this.logger                 = logger;
+    public PeerServer(peerProcess host_peer) {
+        this.host_peer = host_peer;
     }
     public void run() {
         System.out.println("The server is running.");
@@ -26,7 +20,7 @@ public class PeerServer extends Thread {
 
         // listen and accept connection requests
         try {
-            listener = new ServerSocket(curr_peer.peer_port);
+            listener = new ServerSocket(host_peer.host_details.peer_port);
             while(true) {
                 // Start a handler for the incoming connection
                 new Handler(listener.accept()).start();
@@ -72,13 +66,13 @@ public class PeerServer extends Thread {
                         int msg_len = in.read(hand_shake_rcv);
                         System.out.println(msg_len + "bytes HS recvd at server");
                         Integer client_peer_id = Integer.valueOf(new String(hand_shake_rcv).substring(28));
-                        logger.log("is connected from Peer " + client_peer_id);
+                        host_peer.logger.log("is connected from Peer " + client_peer_id);
 
                         // If Handshake verification gets field, then break
                         if (!HandShake.VerifyHandShakeMessage(hand_shake_rcv))
                             break;
 
-                        neighbor_peer = neighbors_list.get(client_peer_id);
+                        neighbor_peer = host_peer.neighbors_list.get(client_peer_id);
                         // Save the socket, out and in details in neighbor_peer object to use it later
                         neighbor_peer.socket = connection;
                         neighbor_peer.out    = out;
@@ -90,13 +84,14 @@ public class PeerServer extends Thread {
                         System.out.println("Server send handshake");
 
                         // Send bitfield to client
-                        Message bit_field_message = new Message(curr_peer.bitfield_piece_index.size()/8, (byte)5, curr_peer.bitfield_piece_index.toByteArray());
+                        Message bit_field_message = new Message(host_peer.host_details.bitfield_piece_index.size()/8,
+                                (byte)5, host_peer.host_details.bitfield_piece_index.toByteArray());
                         System.out.println(bit_field_message.BuildMessageByteArray());
                         Utils.sendMessage(bit_field_message.BuildMessageByteArray(), out);
 
                         // Create a P2PMessageHandler for each of the TCP Connections which will be responsible
                         // to listen and handle all type of messages
-                        P2PMessageHandler message_handler = new P2PMessageHandler(curr_peer, neighbor_peer);
+                        P2PMessageHandler message_handler = new P2PMessageHandler(host_peer, neighbor_peer);
                         message_handler.MessageListener();
                     }
                 }
