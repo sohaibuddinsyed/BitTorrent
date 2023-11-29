@@ -2,9 +2,6 @@ import java.io.*;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
 
 // PeerClient is responsible to establish TCP Connections with previous peers
 public class PeerClient extends Thread{
@@ -57,15 +54,17 @@ public class PeerClient extends Thread{
 
                 while (true) {
                     // Wait for HandShake message to be received and verified
-                    byte[] hand_shake_rcv = (byte[]) in.readAllBytes();
-                    if (hand_shake.VerifyHandShakeMessage(hand_shake_rcv, neighbor_peer.peer_id))
+                    byte[] hand_shake_rcv = new byte[32];
+                    in.read(hand_shake_rcv);
+                    if(hand_shake.VerifyHandShakeMessage(hand_shake_rcv, neighbor_peer.peer_id))
                         break;
                 }
 
-                // Once HandShake is completed, create a bit field message and send it to the neighbor
-                Message bit_field_message = new Message(host_peer.host_details.bitfield_piece_index.size()/8,
-                        (byte)5, host_peer.host_details.bitfield_piece_index.toByteArray());
-                Utils.sendMessage(bit_field_message.BuildMessageByteArray(), out);
+                // If host has file, create a bit field message and send it to the neighbor
+                if (host_peer.host_details.has_file) {
+                    Message bit_field_message = new Message(MessageType.BITFIELD, host_peer.host_details.bitfield_piece_index.toByteArray());
+                    Utils.sendMessage(bit_field_message.BuildMessageByteArray(), out);
+                }
 
                 // Create a P2PMessageHandler for each of the TCP Connections which will be responsible
                 // to listen and handle all type of messages

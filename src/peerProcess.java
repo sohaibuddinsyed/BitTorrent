@@ -1,6 +1,4 @@
 import java.io.*;
-import java.net.*;
-import java.nio.*;
 import java.util.*;
 
 import static java.lang.System.exit;
@@ -42,6 +40,7 @@ public class peerProcess {
                 // Store as a hashmap with key as parameter name and value as parameter's value
                 config_params.put(line_split[0], line_split[1]);
             }
+            file.close();
         }
         catch (Exception ex) {
             System.out.println(ex.toString());
@@ -72,6 +71,7 @@ public class peerProcess {
                     neighbors_list.put(p_id, peer_details);
                 }
             }
+            file.close();
         }
         catch (Exception ex) {
             System.out.println(ex.toString());
@@ -83,7 +83,7 @@ public class peerProcess {
         int file_size    = Integer.parseInt(config_params.get("FileSize"));
         int piece_size   = Integer.parseInt(config_params.get("PieceSize"));
         int no_of_pieces = (int) Math.ceil((double)file_size/piece_size);
-
+        host_details.no_of_pieces = no_of_pieces;
         BitSet bitfield_piece_index = new BitSet(no_of_pieces);
 
         // Sets all bit values to 1 if has_file is true else the values will be 0 by default
@@ -113,5 +113,4 @@ public class peerProcess {
         peer_client.start();
         peer_server.start();
     }
-
 }

@@ -1,5 +1,3 @@
-import java.nio.charset.StandardCharsets;
-
 public class HandShake {
     private static String handshake_header;
     private String zero_bits;
@@ -25,7 +23,7 @@ public class HandShake {
     }
 
     // Verifies if the received handshake message has a valid handshake header in case of PeerServer
-    public static boolean VerifyHandShakeMessage(byte[] handshake_msg) {
+    public boolean VerifyHandShakeMessage(byte[] handshake_msg) {
         String msg = new String(handshake_msg);
         return msg.substring(0, 18).equals(handshake_header);
     }
