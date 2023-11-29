@@ -1,6 +1,5 @@
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.BitSet;
@@ -86,7 +85,7 @@ public class P2PMessageHandler {
     public void HandleRequestMessage(Message message_received) {
         if (!host_peer.unchoked_by_host.get(neighbor_peer.peer_id))
             return;
-        int requested_index = Integer.parseInt(message_received.GetMessagePayload().toString());
+        // int requested_index = Integer.parseInt(message_received.GetMessagePayload().toString());
         // Create a class to handle file division into pieces and to pull required piece
     }
 

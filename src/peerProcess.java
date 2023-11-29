@@ -1,6 +1,4 @@
 import java.io.*;
-import java.net.*;
-import java.nio.*;
 import java.util.*;
 
 import static java.lang.System.exit;
@@ -42,6 +40,7 @@ public class peerProcess {
                 // Store as a hashmap with key as parameter name and value as parameter's value
                 config_params.put(line_split[0], line_split[1]);
             }
+            file.close();
         }
         catch (Exception ex) {
             System.out.println(ex.toString());
@@ -72,6 +71,7 @@ public class peerProcess {
                     neighbors_list.put(p_id, peer_details);
                 }
             }
+            file.close();
         }
         catch (Exception ex) {
             System.out.println(ex.toString());
