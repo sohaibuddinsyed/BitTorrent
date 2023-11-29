@@ -20,7 +20,7 @@ public class P2PMessageHandler {
         BitSet peer_bitset                 = new BitSet(message.GetMessagePayload().length * 8); // 8 bits in a byte
         // Retrieve the message payload and store it in neighbor_peer object
         byte[] message_payload             = message.GetMessagePayload();
-        neighbor_peer.bitfield_piece_index = BitSet.valueOf(message_payload);
+        boolean interested                 = false;
 
         // Set the peer bitfield from bitfield index payload
         for (int i = 0; i < message.GetMessageLength(); i++) {
@@ -28,19 +28,19 @@ public class P2PMessageHandler {
             for (int j = 0; j < 8; j++) {
                 if ((message_payload[i] & (1 << j)) != 0) {
                     peer_bitset.set(i * 8 + j);
+                    // If the peer neighbor has any bits host does not have, flag interested to true
+                    if(peer_bitset.get(i * 8 + j) && !host_peer.host_details.bitfield_piece_index.get(i * 8 + j)) {
+                        interested = true;
+                    }
                 }
             }
         }
-        // Compare with current host's bitfield_piece_index
-        BitSet copy = (BitSet) host_peer.host_details.bitfield_piece_index.clone();
-        // Below will set the bit fields as one if there's any missing piece available in neighbor
-        copy.andNot(peer_bitset);
 
         // Send Interested if the above result is not empty else send NotInterested message
-        byte msg_type = !copy.isEmpty() ? (byte)2 : (byte)3;
+        MessageType msg_type = interested ? MessageType.INTERESTED : MessageType.NOTINTERESTED;
 
         // Make third argument in Message as None and avoid sending third argument?
-        Message msg = new Message(0, msg_type, new byte[0]);
+        Message msg = new Message(msg_type, new byte[1]);
         Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
     }
 
@@ -53,8 +53,8 @@ public class P2PMessageHandler {
         // Gets next interested index and sends request message
         int interested_index = Utils.GetInterestIndex(host_peer, neighbor_peer);
         if (interested_index != -1) {
-            Message msg = new Message(0, (byte)6,
-                    ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(interested_index).array());
+            Message msg = new Message(MessageType.REQUEST,
+                    ByteBuffer.allocate(4).order(ByteOrder.nativeOrder()).putInt(interested_index).array());
             Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
             host_peer.requested_indices.add(interested_index);
         }
@@ -77,9 +77,9 @@ public class P2PMessageHandler {
         // Check if interested
         boolean send_interested = Utils.CheckInterestInIndex(host_peer.host_details, neighbor_peer, bitfield_index);
 
-        byte msg_type = send_interested ? (byte)2 : (byte)3;
+        MessageType msg_type = send_interested ? MessageType.INTERESTED : MessageType.NOTINTERESTED;
 
-        Message msg = new Message(0, msg_type, new byte[0]);
+        Message msg = new Message(msg_type, new byte[0]);
         Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
     }
 
@@ -100,44 +100,51 @@ public class P2PMessageHandler {
         MessageType msg_type;
         while (true) {
             // Receive message and retrieve the message type
-            Message message_received = new Message((byte[]) in.readAllBytes());
-            msg_type = message_received.GetMessageType();
-
-            // Take Action based on message type received
-            switch(msg_type) {
-                case CHOKE: {
-                    HandleChokeMessage();
-                    break;
+            if(in.available() != 0) {
+                int bytes_available = in.available();
+                byte[] recvd_message = new byte[bytes_available];
+                in.read(recvd_message);
+                
+                Message message_received = new Message(recvd_message);
+                msg_type = message_received.GetMessageType();
+                
+                host_peer.logger.log("received " + msg_type.toString() + " message from Peer " + neighbor_peer.peer_id);
+                // Take Action based on message type received
+                switch(msg_type) {
+                    case CHOKE: {
+                        HandleChokeMessage();
+                        break;
+                    }
+                    case UNCHOKE: {
+                        HandleUnChokeMessage();
+                        break;
+                    }
+                    case INTERESTED: {
+                        HandleInterestedMessage();
+                        break;
+                    }
+                    case NOTINTERESTED: {
+                        HandleNotInterestedMessage();
+                        break;
+                    }
+                    case HAVE: {
+                        HandleHaveMessage(message_received);
+                        break;
+                    }
+                    case BITFIELD: {
+                        HandleBitFieldMessage(message_received);
+                        break;
+                    }
+                    case REQUEST: {
+                        HandleRequestMessage(message_received);
+                        break;
+                    }
+                    case PIECE: {
+                        HandlePieceMessage();
+                        break;
+                    }
+                    default: ;
                 }
-                case UNCHOKE: {
-                    HandleUnChokeMessage();
-                    break;
-                }
-                case INTERESTED: {
-                    HandleInterestedMessage();
-                    break;
-                }
-                case NOTINTERESTED: {
-                    HandleNotInterestedMessage();
-                    break;
-                }
-                case HAVE: {
-                    HandleHaveMessage(message_received);
-                    break;
-                }
-                case BITFIELD: {
-                    HandleBitFieldMessage(message_received);
-                    break;
-                }
-                case REQUEST: {
-                    HandleRequestMessage(message_received);
-                    break;
-                }
-                case PIECE: {
-                    HandlePieceMessage();
-                    break;
-                }
-                default: ;
             }
         }
     }

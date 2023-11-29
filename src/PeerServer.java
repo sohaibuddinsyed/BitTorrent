@@ -15,7 +15,7 @@ public class PeerServer extends Thread {
         this.host_peer = host_peer;
     }
     public void run() {
-        System.out.println("The server is running.");
+        System.out.println("The server is running....");
         ServerSocket listener = null;
 
         // listen and accept connection requests
@@ -64,14 +64,14 @@ public class PeerServer extends Thread {
                     {
                         // Receive handshake from client
                         int msg_len = in.read(hand_shake_rcv);
-                        System.out.println(msg_len + "bytes HS recvd at server");
                         Integer client_peer_id = Integer.valueOf(new String(hand_shake_rcv).substring(28));
-                        host_peer.logger.log("is connected from Peer " + client_peer_id);
-
+                        
                         // If Handshake verification gets field, then break
-                        if (!HandShake.VerifyHandShakeMessage(hand_shake_rcv))
+                        HandShake hand_shake_msg = new HandShake(host_peer.peer_id);
+                        if (!hand_shake_msg.VerifyHandShakeMessage(hand_shake_rcv))
                             break;
-
+                        
+                        host_peer.logger.log("is connected from Peer " + client_peer_id);
                         neighbor_peer = host_peer.neighbors_list.get(client_peer_id);
                         // Save the socket, out and in details in neighbor_peer object to use it later
                         neighbor_peer.socket = connection;
@@ -79,15 +79,14 @@ public class PeerServer extends Thread {
                         neighbor_peer.in     = in;
 
                         // Send handshake to client
-                        HandShake hand_shake_msg = new HandShake(client_peer_id);
                         Utils.sendMessage(hand_shake_msg.BuildHandshakeMessage(), out);
-                        System.out.println("Server send handshake");
-
-                        // Send bitfield to client
-                        Message bit_field_message = new Message(host_peer.host_details.bitfield_piece_index.size()/8,
-                                (byte)5, host_peer.host_details.bitfield_piece_index.toByteArray());
-                        System.out.println(bit_field_message.BuildMessageByteArray());
-                        Utils.sendMessage(bit_field_message.BuildMessageByteArray(), out);
+                        
+                        // If server has file, send bitfield to client
+                        if(host_peer.host_details.has_file) {
+                            Message bit_field_message = new Message(MessageType.BITFIELD, host_peer.host_details.bitfield_piece_index.toByteArray());
+                            Utils.sendMessage(bit_field_message.BuildMessageByteArray(), out);
+                        }
+                        
 
                         // Create a P2PMessageHandler for each of the TCP Connections which will be responsible
                         // to listen and handle all type of messages
