@@ -7,15 +7,17 @@ public class peerProcess {
 
     public Integer peer_id; // Current Host's peer id
     public PeerDetails host_details; // To store current peer details as PeerDetails object
-    private static HashMap<String, String> config_params; // Stores the Common.cfg parameters
+    public static HashMap<String, String> config_params; // Stores the Common.cfg parameters
     public HashMap<Integer, PeerDetails> neighbors_list; // All Neighbors stored as hashmap
     public ArrayList<Integer> previous_neighbors_ids; // List of Neighbors listed before current peer
     public HashMap<Integer, Boolean> neighbors_interested_in_host;
     public HashMap<Integer, Boolean> choked_by_neighbors;
     public HashMap<Integer, Boolean> unchoked_by_host;
+    public HashMap<Integer, Integer> neighbor_downloads;
     public Set<Integer> requested_indices;
     private static PeerClient peer_client;
     private static PeerServer peer_server;
+    private static SelectNeighbors select_neighbors;
     public Logger logger;
 
     public peerProcess(int id) {
@@ -25,7 +27,9 @@ public class peerProcess {
         previous_neighbors_ids       = new ArrayList<>();
         neighbors_interested_in_host = new HashMap<>();
         choked_by_neighbors          = new HashMap<>();
+        unchoked_by_host             = new HashMap<>();
         requested_indices            = new HashSet<>();
+        neighbor_downloads           = new HashMap<>();
         logger                       = new Logger(peer_id.toString());
     }
 
@@ -70,6 +74,8 @@ public class peerProcess {
                     // All the neighbors information is stored in a hashmap
                     neighbors_list.put(p_id, peer_details);
                 }
+                choked_by_neighbors.put(peer_id, true);
+                unchoked_by_host.put(peer_id, false);
             }
             file.close();
         }
@@ -86,11 +92,10 @@ public class peerProcess {
         host_details.no_of_pieces = no_of_pieces;
         BitSet bitfield_piece_index = new BitSet(no_of_pieces);
 
-        // Sets all bit values to 1 if has_file is true else the values will be 0 by default
-        if(host_details.has_file) {
-            for(int i = 0; i < no_of_pieces; i++) {
-                bitfield_piece_index.set(i);
-            }
+        // Sets all bit values to 1 if has_file is true else 0
+        for(int i = 0; i < no_of_pieces; i++) {
+            if(host_details.has_file) bitfield_piece_index.set(i, true);
+            else bitfield_piece_index.set(i, false);
         }
         host_details.bitfield_piece_index = bitfield_piece_index;
     }
@@ -110,7 +115,10 @@ public class peerProcess {
         // Creating PeerClient and PeerServer object
         peer_client = new PeerClient(peer);
         peer_server = new PeerServer(peer);
+        select_neighbors = new SelectNeighbors(peer);
+        
         peer_client.start();
         peer_server.start();
+        select_neighbors.start();
     }
 }

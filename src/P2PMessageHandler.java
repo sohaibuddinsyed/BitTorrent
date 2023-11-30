@@ -2,15 +2,18 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.BitSet;
 
 public class P2PMessageHandler {
     peerProcess host_peer; // Current host
     PeerDetails neighbor_peer; // Neighbor peer to which the current TCP is established
+    Boolean chocked_by_host;
 
     public P2PMessageHandler(peerProcess host_peer, PeerDetails neighbor_peer) {
         this.host_peer     = host_peer;
         this.neighbor_peer = neighbor_peer;
+        this.chocked_by_host = true;
     }
 
     // Method to handle BitField Message received from Neighbor
@@ -34,6 +37,8 @@ public class P2PMessageHandler {
                 }
             }
         }
+        // Set neighbor bit field
+        neighbor_peer.bitfield_piece_index = peer_bitset;
 
         // Send Interested if the above result is not empty else send NotInterested message
         MessageType msg_type = interested ? MessageType.INTERESTED : MessageType.NOTINTERESTED;
@@ -52,8 +57,7 @@ public class P2PMessageHandler {
         // Gets next interested index and sends request message
         int interested_index = Utils.GetInterestIndex(host_peer, neighbor_peer);
         if (interested_index != -1) {
-            Message msg = new Message(MessageType.REQUEST,
-                    ByteBuffer.allocate(4).order(ByteOrder.nativeOrder()).putInt(interested_index).array());
+            Message msg = new Message(MessageType.REQUEST, ByteBuffer.allocate(4).putInt(interested_index).array());
             Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
             host_peer.requested_indices.add(interested_index);
         }
@@ -82,7 +86,7 @@ public class P2PMessageHandler {
         Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
     }
 
-    public void HandleRequestMessage(Message message_received) {
+    public void HandleRequestMessage(Message message_received, int index) {
         if (!host_peer.unchoked_by_host.get(neighbor_peer.peer_id))
             return;
         // int requested_index = Integer.parseInt(message_received.GetMessagePayload().toString());
@@ -91,13 +95,30 @@ public class P2PMessageHandler {
 
     public void HandlePieceMessage() {
         // To-do
-        
+    }
+
+    public void SendUnChokedMessage() {
+        Message msg = new Message(MessageType.UNCHOKE, new byte[1]);
+        Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
+    }
+    
+    public void SendChokedMessage() {
+        Message msg = new Message(MessageType.CHOKE, new byte[1]);
+        Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
     }
 
     public void MessageListener() throws IOException {
         DataInputStream in = neighbor_peer.in;
         MessageType msg_type;
         while (true) {
+            if(chocked_by_host && host_peer.unchoked_by_host.getOrDefault(neighbor_peer.peer_id, false)) {
+                chocked_by_host = false;
+                SendUnChokedMessage();
+            }
+            if(!chocked_by_host && !host_peer.unchoked_by_host.get(neighbor_peer.peer_id)) {
+                chocked_by_host = true;
+                SendChokedMessage();
+            }
             // Receive message and retrieve the message type
             if(in.available() != 0) {
                 int bytes_available = in.available();
@@ -107,35 +128,42 @@ public class P2PMessageHandler {
                 Message message_received = new Message(recvd_message);
                 msg_type = message_received.GetMessageType();
                 
-                host_peer.logger.log("received " + msg_type.toString() + " message from Peer " + neighbor_peer.peer_id);
                 // Take Action based on message type received
                 switch(msg_type) {
                     case CHOKE: {
+                        host_peer.logger.log("received " + msg_type.toString() + " message from Peer " + neighbor_peer.peer_id);
                         HandleChokeMessage();
                         break;
                     }
                     case UNCHOKE: {
+                        host_peer.logger.log("received " + msg_type.toString() + " message from Peer " + neighbor_peer.peer_id);
                         HandleUnChokeMessage();
                         break;
                     }
                     case INTERESTED: {
+                        host_peer.logger.log("received " + msg_type.toString() + " message from Peer " + neighbor_peer.peer_id);
                         HandleInterestedMessage();
                         break;
                     }
                     case NOTINTERESTED: {
+                        host_peer.logger.log("received " + msg_type.toString() + " message from Peer " + neighbor_peer.peer_id);
                         HandleNotInterestedMessage();
                         break;
                     }
                     case HAVE: {
+                        host_peer.logger.log("received " + msg_type.toString() + " message from Peer " + neighbor_peer.peer_id);
                         HandleHaveMessage(message_received);
                         break;
                     }
                     case BITFIELD: {
+                        host_peer.logger.log("received " + msg_type.toString() + " message from Peer " + neighbor_peer.peer_id);
                         HandleBitFieldMessage(message_received);
                         break;
                     }
                     case REQUEST: {
-                        HandleRequestMessage(message_received);
+                        int index = ByteBuffer.wrap(Arrays.copyOfRange(message_received.GetMessagePayload(), 0, 4)).getInt();
+                        host_peer.logger.log("received " + msg_type.toString() + " (" + index + ") message from Peer " + neighbor_peer.peer_id);
+                        HandleRequestMessage(message_received, index);
                         break;
                     }
                     case PIECE: {
