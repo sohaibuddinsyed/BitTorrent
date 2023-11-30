@@ -129,3 +129,61 @@
 29 Nov 2023 19:29:50: Peer 1001 has the preferred neighbors 1003
 29 Nov 2023 19:29:55: Peer 1001 has the preferred neighbors 1003
 29 Nov 2023 19:30:00: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:30:05: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:30:05: Peer 1001 received REQUEST (9) message from Peer 1004
+29 Nov 2023 19:30:10: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:30:15: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:30:15: Peer 1001 received REQUEST (17) message from Peer 1002
+29 Nov 2023 19:30:20: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:30:20: Peer 1001 received REQUEST (16) message from Peer 1003
+29 Nov 2023 19:30:25: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:30:30: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:30:30: Peer 1001 received REQUEST (18) message from Peer 1002
+29 Nov 2023 19:30:35: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:30:35: Peer 1001 received REQUEST (17) message from Peer 1003
+29 Nov 2023 19:30:40: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:30:45: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:30:45: Peer 1001 received REQUEST (10) message from Peer 1004
+29 Nov 2023 19:30:50: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:30:50: Peer 1001 received REQUEST (18) message from Peer 1003
+29 Nov 2023 19:30:55: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:30:55: Peer 1001 received REQUEST (19) message from Peer 1002
+29 Nov 2023 19:31:00: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:31:00: Peer 1001 received REQUEST (11) message from Peer 1004
+29 Nov 2023 19:31:05: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:31:05: Peer 1001 received REQUEST (20) message from Peer 1002
+29 Nov 2023 19:31:10: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:31:15: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:31:15: Peer 1001 received REQUEST (19) message from Peer 1003
+29 Nov 2023 19:31:20: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:31:20: Peer 1001 received REQUEST (21) message from Peer 1002
+29 Nov 2023 19:31:25: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:31:25: Peer 1001 received REQUEST (12) message from Peer 1004
+29 Nov 2023 19:31:30: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:31:35: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:31:35: Peer 1001 received REQUEST (22) message from Peer 1002
+29 Nov 2023 19:31:40: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:31:40: Peer 1001 received REQUEST (20) message from Peer 1003
+29 Nov 2023 19:31:45: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:31:45: Peer 1001 received REQUEST (23) message from Peer 1002
+29 Nov 2023 19:31:50: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:31:50: Peer 1001 received REQUEST (13) message from Peer 1004
+29 Nov 2023 19:31:55: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:32:00: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:32:05: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:32:05: Peer 1001 received REQUEST (24) message from Peer 1002
+29 Nov 2023 19:32:10: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:32:15: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:32:15: Peer 1001 received REQUEST (21) message from Peer 1003
+29 Nov 2023 19:32:20: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:32:20: Peer 1001 received REQUEST (25) message from Peer 1002
+29 Nov 2023 19:32:25: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:32:25: Peer 1001 received REQUEST (22) message from Peer 1003
+29 Nov 2023 19:32:30: Peer 1001 has the preferred neighbors 1003
+29 Nov 2023 19:32:35: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:32:35: Peer 1001 received REQUEST (14) message from Peer 1004
+29 Nov 2023 19:32:40: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:32:45: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:32:50: Peer 1001 has the preferred neighbors 1004
+29 Nov 2023 19:32:55: Peer 1001 has the preferred neighbors 1002
+29 Nov 2023 19:32:55: Peer 1001 received REQUEST (26) message from Peer 1002
