@@ -36,10 +36,11 @@ public class Utils {
     }
 
     public static Integer GetInterestIndex(peerProcess host_peer, PeerDetails neighbor_peer) {
-        int bit_field_size = host_peer.host_details.bitfield_piece_index.size();
+        int bit_field_size = host_peer.host_details.no_of_pieces;
         // compare the entire bitfield
         for(int i = 0; i < bit_field_size; i++) {
-            if(!host_peer.host_details.bitfield_piece_index.get(i) && neighbor_peer.bitfield_piece_index.get(i)
+            boolean host_bit_empty = host_peer.host_details.bitfield_piece_index.length() == 0 || !host_peer.host_details.bitfield_piece_index.get(i);
+            if(host_bit_empty && neighbor_peer.bitfield_piece_index.get(i)
                     && !host_peer.requested_indices.contains(i)) {
                 return i;
             }
