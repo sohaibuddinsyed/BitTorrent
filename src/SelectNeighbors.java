@@ -13,8 +13,8 @@ public class SelectNeighbors extends Thread {
     }
     public void run() {
         // Read the time interval 'P' and preferred neighbors 'K'
-        float p = Integer.parseInt(peerProcess.config_params.get("UnchokingInterval"));
-        int k = Integer.parseInt(peerProcess.config_params.get("NumberOfPreferredNeighbors"));
+        float p = Integer.parseInt(host_peer.config_params.get("UnchokingInterval"));
+        int k = Integer.parseInt(host_peer.config_params.get("NumberOfPreferredNeighbors"));
         try {
             while(true) {
                 // If there is atleast one interested neighbor proceed to select min(k, interested)
