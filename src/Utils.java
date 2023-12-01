@@ -58,7 +58,7 @@ public class Utils {
 
     public static void BroadcastMessage(peerProcess host_peer, Message msg) {
         for (Map.Entry<Integer, PeerDetails> neighbor : host_peer.neighbors_list.entrySet()) {
-            Utils.sendMessage(msg.BuildMessageByteArray(), neighbor.getValue().out);
+            sendMessage(msg.BuildMessageByteArray(), neighbor.getValue().out);
         }
     }
 }
