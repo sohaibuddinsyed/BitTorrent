@@ -10,11 +10,21 @@ public class P2PMessageHandler {
     peerProcess host_peer; // Current host
     PeerDetails neighbor_peer; // Neighbor peer to which the current TCP is established
     Boolean chocked_by_host;
-
+    Integer latest_piece_ptr;
+    
     public P2PMessageHandler(peerProcess host_peer, PeerDetails neighbor_peer) {
         this.host_peer     = host_peer;
         this.neighbor_peer = neighbor_peer;
         this.chocked_by_host = true;
+        this.latest_piece_ptr = 0;
+        InitializeNeighBitField();
+    }
+
+    // Initializing neigh bitfield to avoid null ptr exceptions in when no bitfield message is received
+    private void InitializeNeighBitField() {
+        int allocated_bits = (int) Math.ceil((float) host_peer.no_of_pieces/64) * 64;
+        neighbor_peer.bitfield_piece_index = new BitSet(allocated_bits);
+        neighbor_peer.bitfield_piece_index.set(host_peer.no_of_pieces);
     }
 
     // Method to handle BitField Message received from Neighbor
@@ -124,16 +134,14 @@ public class P2PMessageHandler {
         // request for a given index is made to a single neighbor
         if (host_peer.host_details.bitfield_piece_index.get(index))
             return;
-
+            
         // Copy the piece and set it in the respective index
         byte[] piece_payload = Arrays.copyOfRange(message_received.GetMessagePayload(), 4,
-                message_received.GetMessageLength());
-
+        message_received.GetMessageLength());
         host_peer.file_handler.SetPiece(index, piece_payload);
-
-        // Broadcast every neighbor about this new piece availability using HAVE message
-        Message msg = new Message(MessageType.HAVE, ByteBuffer.allocate(4).putInt(index).array());
-        Utils.BroadcastMessage(host_peer, msg);
+        
+        // (Broadcast) Add the piece index into the latest piece shared resource for all threads
+        host_peer.host_details.latest_piece.add(index);
 
         // Check if all pieces received and build the file
         if (Utils.CheckAllPiecesReceived(host_peer.host_details.bitfield_piece_index, host_peer.no_of_pieces)) {
@@ -162,6 +170,17 @@ public class P2PMessageHandler {
         Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
     }
 
+    public void SendHaveMessage() {
+        int n = host_peer.host_details.latest_piece.size();
+        int i = latest_piece_ptr;
+        while(i < n) {
+            Message msg = new Message(MessageType.HAVE, ByteBuffer.allocate(4).putInt(host_peer.host_details.latest_piece.get(latest_piece_ptr)).array());
+            Utils.sendMessage(msg.BuildMessageByteArray(), neighbor_peer.out);
+            i++;
+        }
+        latest_piece_ptr = i;
+    }
+
     public void MessageListener() throws IOException {
         DataInputStream in = neighbor_peer.in;
         MessageType msg_type;
@@ -174,6 +193,11 @@ public class P2PMessageHandler {
             } else if(!chocked_by_host && !is_peer_unchoked && !is_peer_opt ) {
                 chocked_by_host = true;
                 SendChokedMessage();
+            }
+            
+            // Check for any new pieces received
+            if(latest_piece_ptr < host_peer.host_details.latest_piece.size()) {
+                SendHaveMessage();
             }
 
             // Receive message and retrieve the message type
