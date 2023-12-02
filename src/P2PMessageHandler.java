@@ -1,3 +1,5 @@
+import static java.lang.System.console;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -94,7 +96,7 @@ public class P2PMessageHandler {
     public void HandleRequestMessage(Message message_received, int index) {
         // Don't send data when neighbor is choked
         // TODO: We set requested_indices as true when a request is sent, this should set back to false in this case
-        if (!host_peer.unchoked_by_host.get(neighbor_peer.peer_id))
+        if (!host_peer.unchoked_by_host.get(neighbor_peer.peer_id) && host_peer.opt_neighbor != neighbor_peer.peer_id)
             return;
 
         // Below should not happen as the request is received only if the host has required piece
@@ -164,13 +166,16 @@ public class P2PMessageHandler {
         DataInputStream in = neighbor_peer.in;
         MessageType msg_type;
         while (true) {
-            if(chocked_by_host && host_peer.unchoked_by_host.getOrDefault(neighbor_peer.peer_id, false)) {
+            boolean is_peer_opt = neighbor_peer.peer_id == host_peer.opt_neighbor;
+            boolean is_peer_unchoked = host_peer.unchoked_by_host.getOrDefault(neighbor_peer.peer_id, false);
+            if(chocked_by_host && ( is_peer_unchoked || is_peer_opt )) {
                 chocked_by_host = false;
                 SendUnChokedMessage();
-            } else if(!chocked_by_host && !host_peer.unchoked_by_host.get(neighbor_peer.peer_id)) {
+            } else if(!chocked_by_host && !is_peer_unchoked && !is_peer_opt ) {
                 chocked_by_host = true;
                 SendChokedMessage();
             }
+
             // Receive message and retrieve the message type
             if(in.available() != 0) {
                 int bytes_available = in.available();
