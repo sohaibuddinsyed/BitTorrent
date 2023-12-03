@@ -1,5 +1,7 @@
 import java.io.*;
 import java.util.*;
+import java.lang.*;
+import java.nio.file.Files;
 
 import static java.lang.System.exit;
 
@@ -82,6 +84,23 @@ public class peerProcess {
                 unchoked_by_host.put(p_id, false);
             }
             file.close();
+
+            // Create host directory to store 'theFile'
+            String curr_dir = System.getProperty("user.dir");
+            String full_dir_path = curr_dir + "/" + peer_id;
+            File dir = new File(full_dir_path);
+            dir.mkdir();
+
+            // Copy 'thefile' to host dir if host has file
+            if(host_details.has_file) {
+                File source = new File(curr_dir + "/thefile");
+                File dest = new File(curr_dir + "/" + peer_id + "/thefile");
+                try {
+                    Files.copy(source.toPath(), dest.toPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } 
+            }
         }
         catch (Exception ex) {
             System.out.println(ex.toString());
