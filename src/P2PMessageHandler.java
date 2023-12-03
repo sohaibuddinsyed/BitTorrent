@@ -53,7 +53,10 @@ public class P2PMessageHandler {
         }
         // Set neighbor bit field
         neighbor_peer.bitfield_piece_index = peer_bitset;
-        // host_peer.neighbors_list.put(neighbor_peer.peer_id, neighbor_peer);
+        // if(Utils.CheckAllPiecesReceived(host_peer.neighbors_list.get(neighbor_peer.peer_id).bitfield_piece_index, host_peer.no_of_pieces)){
+            // If Multiple haves from same neighbor - can cause early termination
+            host_peer.completed_peer_files += 1;
+        // }
 
         // Send Interested if the above result is not empty else send NotInterested message
         MessageType msg_type = interested ? MessageType.INTERESTED : MessageType.NOTINTERESTED;
@@ -93,12 +96,18 @@ public class P2PMessageHandler {
     public void HandleHaveMessage(Message message_received) {
         int bitfield_index = ByteBuffer.wrap(Arrays.copyOfRange(message_received.GetMessagePayload(), 0, 4)).getInt();;
         
+        // Update neighbor and check if complete
         neighbor_peer.bitfield_piece_index.set(bitfield_index);
-        // host_peer.neighbors_list.put(neighbor_peer.peer_id, neighbor_peer);
-        
+        if(Utils.CheckAllPiecesReceived(host_peer.neighbors_list.get(neighbor_peer.peer_id).bitfield_piece_index, host_peer.no_of_pieces)){
+            // If Multiple haves from same neighbor - can cause early termination
+            host_peer.completed_peer_files += 1;
+        }
+        System.err.println(host_peer.host_details.has_file + " " + host_peer.completed_peer_files + " " + host_peer.neighbors_list.size());
+
+
         // Set the bitfield index received from the neighbor_peer
-        if(host_peer.host_details.has_file)
-            return;
+        // if(host_peer.host_details.has_file)
+        //     return;
 
         // Check if interested
         boolean send_interested = Utils.CheckInterestInIndex(host_peer.host_details, neighbor_peer, bitfield_index);
@@ -194,7 +203,14 @@ public class P2PMessageHandler {
     }
     
     public void CheckTermination() {
+
         // Todo
+        if(latest_piece_ptr == host_peer.no_of_pieces && host_peer.host_details.has_file && host_peer.completed_peer_files == host_peer.neighbors_list.size()){
+            System.err.println("**Exiting Process Client/Server**");
+            exit(0);
+
+        }
+
     }
 
     private void ProcessMessage(Message message_received) throws IOException {
@@ -277,6 +293,7 @@ public class P2PMessageHandler {
             // Check for any new pieces received
             if(latest_piece_ptr < host_peer.host_details.latest_piece.size()) {
                 RelayHaveMessages();
+                System.err.println(latest_piece_ptr+" "+host_peer.no_of_pieces);
             }
 
             // Receive message and retrieve the message type

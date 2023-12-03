@@ -3,6 +3,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Random;
+import static java.lang.System.exit;
 
 public class SelectNeighbors extends Thread {
     private peerProcess host_peer;
@@ -73,6 +74,12 @@ public class SelectNeighbors extends Thread {
                     // Clear downloads to record new values for the next interval
                     host_peer.neighbor_downloads.clear();
                     
+                    // Terminate once host checks the file count
+                    System.err.println(host_peer.host_details.has_file + " " + host_peer.completed_peer_files + " " + host_peer.neighbors_list.size());
+                    if(host_peer.host_details.has_file && host_peer.completed_peer_files == host_peer.neighbors_list.size()){
+                        System.err.println("**Exiting Process SelectNeighbors**");
+                        exit(0);         
+                    }
                     // Sleep for interval 'p'
                     Thread.sleep((int)p * 1000);
                 }
