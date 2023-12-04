@@ -1,6 +1,5 @@
 import java.io.*;
 import java.util.*;
-import java.lang.*;
 import java.nio.file.Files;
 
 import static java.lang.System.exit;
@@ -25,9 +24,12 @@ public class peerProcess {
     public Logger logger;
     public Integer no_of_pieces;
     public FileHandler file_handler;
+    public int completed_peer_files;
+    public int completed_threads;
 
     public peerProcess(int id) {
         peer_id                      = id;
+        completed_threads            = 0;
         config_params                = new HashMap<>();
         neighbors_list               = new HashMap<>();
         previous_neighbors_ids       = new ArrayList<>();
@@ -37,6 +39,7 @@ public class peerProcess {
         requested_indices            = new HashSet<>();
         neighbor_downloads           = new HashMap<>();
         logger                       = new Logger(peer_id.toString());
+        completed_peer_files         = 0;
     }
 
     // Method to read common.cfg and store values in a hashmap
@@ -87,19 +90,21 @@ public class peerProcess {
 
             // Create host directory to store 'theFile'
             String curr_dir = System.getProperty("user.dir");
-            String full_dir_path = curr_dir + "/" + peer_id;
+            String full_dir_path = curr_dir + "/" + "peer_" + peer_id;
             File dir = new File(full_dir_path);
             dir.mkdir();
 
             // Copy 'thefile' to host dir if host has file
             if(host_details.has_file) {
                 File source = new File(curr_dir + "/thefile");
-                File dest = new File(curr_dir + "/" + peer_id + "/thefile");
-                try {
-                    Files.copy(source.toPath(), dest.toPath());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } 
+                File dest = new File(curr_dir + "/peer_" + peer_id + "/thefile");
+                if(!dest.exists()) {
+                    try {
+                        Files.copy(source.toPath(), dest.toPath());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } 
+                }
             }
         }
         catch (Exception ex) {
@@ -153,13 +158,16 @@ public class peerProcess {
         peerProcess peer = new peerProcess(Integer.parseInt(args[0]));
         // Read Common.cfg file
         peer.ReadCommonCfg();
+
         // Read PeerInfo.cfg file
         peer.ReadPeerInfoCfg();
+
+        // Set bitfield and file pieces
         peer.SetBitField();
         peer.HandleFile();
-        //peer.CopyHandleFile();
         
-        // Creating PeerClient and PeerServer object
+        // Creating PeerClient, PeerServer objects and starting selection of 
+        // 'k' preferred neighbors and one optimistically unchoked neighbor
         peer_client = new PeerClient(peer);
         peer_server = new PeerServer(peer);
         select_neighbors = new SelectNeighbors(peer);

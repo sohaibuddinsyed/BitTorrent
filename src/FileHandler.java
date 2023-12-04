@@ -1,9 +1,5 @@
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.util.*;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.Path;
 
 public class FileHandler {
     private static String file_name;
@@ -12,7 +8,7 @@ public class FileHandler {
     private Integer piece_size;
     private Integer file_size;
     public FileHandler(peerProcess host_peer) {
-        file_name = host_peer.peer_id.toString() + "/" + host_peer.config_params.get("FileName");
+        file_name = "peer_" + host_peer.peer_id.toString() + "/" + host_peer.config_params.get("FileName");
         this.host_peer = host_peer;
         piece_size = Integer.parseInt(host_peer.config_params.get("PieceSize"));
         file_size  = Integer.parseInt(host_peer.config_params.get("FileSize"));
@@ -65,7 +61,11 @@ public class FileHandler {
         File file = new File(file_name);
         FileOutputStream file_stream = new FileOutputStream(file);
         for (int i = 0; i < host_peer.no_of_pieces; i++) {
-            file_stream.write(file_pieces[i]);
+            if(i == host_peer.no_of_pieces - 1) {
+                file_stream.write(file_pieces[i], 0, file_size % piece_size);
+            } else {
+                file_stream.write(file_pieces[i]);
+            }
         }
         file_stream.close();    
     }
