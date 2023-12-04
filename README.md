@@ -11,7 +11,7 @@ Computer Networks ProjectGroup Name: **Sohaib Uddin Syed's Group**
 - Unzip the project and navigate to src directory
 - Compile with ```javac *.java```
 - Project compiled with ```openjdk 17.0.8.1```
-- Execute with ```java peerProcess <peerID>``` on each machine -> Replace with startRemotePeers
+- Execute with ```./compileJava``` on each machine
   
 ## Project Implementation
 1.	peerProcess.java
