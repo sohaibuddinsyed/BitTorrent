@@ -1,13 +1,7 @@
 # BitTorrent
-
-Computer Networks ProjectGroup Name: **Sohaib Uddin Syed's Group**
+A P2P file sharing software similar to BitTorrent including the essential choking-unchoking and neighbor selection machanisms. The system supports file sharing upto 1 GB between peers across multiple networks.
 
 Short Video demo: https://drive.google.com/file/d/1SZI4klXd0rTRKy2KpB06d1P08F7drJV2/view?usp=sharing
-
-## Project Members 
--	Sohaib Uddin Syed (57405488)
--	Kshitij Maruti Vejre (83323074)
--	Prashanth Thamminedi (45331532)
 
 ## Usage
 - Unzip the project and navigate to src directory
